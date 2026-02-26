@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram Mini App + Adsgram</title>
-    <!-- Optional: Telegram Web App script (for TMA features) -->
+    <!-- Telegram Web App script (optional but recommended) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Adsgram script -->
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
@@ -15,23 +15,51 @@
     <p id="status"></p>
 
     <script>
-        // Replace with your actual Adsgram block ID
-        const BLOCK_ID = "23730";
+        // Your Adsgram block ID
+        const BLOCK_ID = "int-23730";
 
-        // Initialize Adsgram
-        const adController = window.Adsgram.init({ blockId: 23730 });
+        // Initialize Adsgram with your block ID
+        const adController = window.Adsgram.init({ blockId: BLOCK_ID });
 
-        // Handle ad showing
-        document.getElementById('showAdBtn').addEventListener('click', async () => {
-            try {
-                const result = await adController.show();
-                document.getElementById('status').textContent = 'Ad finished: ' + JSON.stringify(result);
-            } catch (error) {
-                document.getElementById('status').textContent = 'Ad error: ' + error.message;
-            }
+        /**
+         * ShowPromiseResult interface:
+         * {
+         *   done: boolean;        // true if user watched till end (or closed interstitial), otherwise false
+         *   description: string;  // event description
+         *   state: 'load' | 'render' | 'playing' | 'destroy'; // banner state
+         *   error: boolean;       // true if event was emitted due to error, otherwise false
+         * }
+         */
+
+        // Show ad on button click
+        document.getElementById('showAdBtn').addEventListener('click', () => {
+            adController.show()
+                .then((result) => {
+                    // Success: ad played or was closed (interstitial)
+                    const { done, description, state, error } = result;
+                    
+                    // For rewarded ads: give reward only if done is true and error is false
+                    if (done && !error) {
+                        // Your code to reward the user goes here
+                        // e.g., giveRewardToUser();
+                        document.getElementById('status').textContent = 
+                            `Reward granted! Ad completed (${state})`;
+                    } else {
+                        // Interstitial closed or ad not fully watched
+                        document.getElementById('status').textContent = 
+                            `Ad finished with done: ${done}, error: ${error} - ${description}`;
+                    }
+                })
+                .catch((result) => {
+                    // Error during ad playback
+                    const { description, error } = result;
+                    document.getElementById('status').textContent = 
+                        `Ad error: ${description} (error: ${error})`;
+                    // Do nothing else (as per the pattern)
+                });
         });
 
-        // Optional: notify Telegram that the app is ready
+        // Notify Telegram that the app is ready
         if (window.Telegram && Telegram.WebApp) {
             Telegram.WebApp.ready();
         }
