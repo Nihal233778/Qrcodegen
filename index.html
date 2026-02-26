@@ -1,68 +1,223 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Adsgram TMA Example</title>
+    <!-- Telegram Mini App styles & meta -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Mini App + Adsgram</title>
-    <!-- Telegram Web App script (optional but recommended) -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Adsgram script -->
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #f5f5f5);
+            color: var(--tg-theme-text-color, #222);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .card {
+            background-color: var(--tg-theme-secondary-bg-color, #ffffff);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.6rem;
+            margin-bottom: 16px;
+            color: var(--tg-theme-accent-text-color, #2A6BFF);
+        }
+        .block-id {
+            background: var(--tg-theme-hint-color, #aaa3);
+            padding: 8px 12px;
+            border-radius: 30px;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+        }
+        .button {
+            background-color: var(--tg-theme-button-color, #2A6BFF);
+            color: var(--tg-theme-button-text-color, white);
+            border: none;
+            border-radius: 30px;
+            padding: 14px 24px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 16px;
+        }
+        .button:active {
+            opacity: 0.8;
+        }
+        .button:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .status {
+            margin-top: 24px;
+            padding: 12px;
+            border-radius: 8px;
+            background-color: var(--tg-theme-hint-color, #eee);
+            font-size: 0.95rem;
+            text-align: left;
+            word-break: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .status p {
+            margin: 6px 0;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: var(--tg-theme-hint-color, #888);
+        }
+    </style>
 </head>
 <body>
-    <h1>My Telegram Mini App</h1>
-    <button id="showAdBtn">Show Ad</button>
-    <p id="status"></p>
+    <div class="card">
+        <h1>🎬 Adsgram Demo</h1>
+        <div class="block-id">Block ID: 23736</div>
+        <p style="margin-bottom: 8px;">Click the button to show a rewarded ad</p>
+        <button id="showAdBtn" class="button">▶ Show Ad</button>
+
+        <!-- Status log area -->
+        <div class="status" id="statusLog">
+            <p>⚡ Initializing...</p>
+        </div>
+        <div class="footer">Powered by Adsgram · Telegram Mini App</div>
+    </div>
+
+    <!-- Telegram Web App script (required for TMA) -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Adsgram script -->
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
     <script>
-        // Your Adsgram block ID
-        const BLOCK_ID = "int-23730";
+        (function() {
+            // --- Telegram Mini App setup ---
+            const tg = window.Telegram?.WebApp;
+            if (tg) {
+                tg.ready();          // notify Telegram that the app is ready
+                tg.expand();          // expand to full height
+                // Optional: set theme colors automatically via CSS variables
+                document.body.style.backgroundColor = tg.backgroundColor || '#f5f5f5';
+            }
 
-        // Initialize Adsgram with your block ID
-        const adController = window.Adsgram.init({ blockId: BLOCK_ID });
+            // --- DOM elements ---
+            const showAdBtn = document.getElementById('showAdBtn');
+            const statusLog = document.getElementById('statusLog');
 
+            // Helper to add status messages
+            function log(message, isError = false) {
+                const p = document.createElement('p');
+                p.textContent = `> ${message}`;
+                if (isError) p.style.color = 'var(--tg-theme-destructive-text-color, #d32f2f)';
+                statusLog.appendChild(p);
+                // Auto-scroll to bottom
+                statusLog.scrollTop = statusLog.scrollHeight;
+            }
+
+            // Clear initial log
+            statusLog.innerHTML = '<p>⏳ Waiting for Adsgram...</p>';
+
+            // --- Adsgram initialization (with blockId = 23736) ---
+            let adController = null;
+            let adsInitialized = false;
+
+            // Ensure Adsgram script is loaded
+            if (window.Adsgram) {
+                try {
+                    adController = window.Adsgram.init({ blockId: "23736" });
+                    adsInitialized = true;
+                    statusLog.innerHTML = '<p>✅ Adsgram initialized (block 23736)</p>';
+                    log('Ready to show ads.');
+                } catch (e) {
+                    statusLog.innerHTML = '<p style="color: red;">❌ Adsgram init failed</p>';
+                    log(e.message, true);
+                    showAdBtn.disabled = true;
+                }
+            } else {
+                // If script not loaded yet, wait for it
+                statusLog.innerHTML = '<p>⏳ Loading Adsgram...</p>';
+                const checkAdsgram = setInterval(() => {
+                    if (window.Adsgram) {
+                        clearInterval(checkAdsgram);
+                        try {
+                            adController = window.Adsgram.init({ blockId: "23736" });
+                            adsInitialized = true;
+                            statusLog.innerHTML = '<p>✅ Adsgram initialized (block 23736)</p>';
+                            log('Ready to show ads.');
+                        } catch (e) {
+                            statusLog.innerHTML = '<p style="color: red;">❌ Adsgram init failed</p>';
+                            log(e.message, true);
+                            showAdBtn.disabled = true;
+                        }
+                    }
+                }, 100);
+            }
+
+            // --- Show ad button handler ---
+            showAdBtn.addEventListener('click', function() {
+                if (!adsInitialized || !adController) {
+                    log('Ad controller not ready yet.', true);
+                    return;
+                }
+
+                log('🚀 Calling AdController.show()...');
+                showAdBtn.disabled = true; // prevent double-click
+
+                // Show the ad as described in the snippet
+                adController.show()
+                    .then((result) => {
+                        // result conforms to ShowPromiseResult interface
+                        // user watched till end or closed it (interstitial)
+                        log(`✅ Ad finished - done: ${result.done}, state: ${result.state}, error: ${result.error}`);
+                        if (result.done) {
+                            log('🎉 Reward the user!');
+                        } else {
+                            log('ℹ️ Ad closed without full watch (interstitial)');
+                        }
+                        showAdBtn.disabled = false;
+                    })
+                    .catch((errorResult) => {
+                        // errorResult also matches ShowPromiseResult with error=true
+                        log(`❌ Ad error - description: ${errorResult.description}, state: ${errorResult.state}`, true);
+                        showAdBtn.disabled = false;
+                    });
+            });
+
+            // Optional: log if Telegram WebApp is available
+            if (tg) {
+                log('Telegram WebApp API ready');
+            } else {
+                log('Running outside Telegram? (TMA features limited)', true);
+            }
+        })();
+    </script>
+
+    <!-- Type reference for ShowPromiseResult (not executed, just for clarity) -->
+    <script>
         /**
-         * ShowPromiseResult interface:
-         * {
-         *   done: boolean;        // true if user watched till end (or closed interstitial), otherwise false
-         *   description: string;  // event description
+         * interface ShowPromiseResult {
+         *   done: boolean;       // true if user watch till the end or close it in interstitial format, otherwise false
+         *   description: string; // event description
          *   state: 'load' | 'render' | 'playing' | 'destroy'; // banner state
-         *   error: boolean;       // true if event was emitted due to error, otherwise false
+         *   error: boolean;      // true if event was emitted due to error, otherwise false
          * }
          */
-
-        // Show ad on button click
-        document.getElementById('showAdBtn').addEventListener('click', () => {
-            adController.show()
-                .then((result) => {
-                    // Success: ad played or was closed (interstitial)
-                    const { done, description, state, error } = result;
-                    
-                    // For rewarded ads: give reward only if done is true and error is false
-                    if (done && !error) {
-                        // Your code to reward the user goes here
-                        // e.g., giveRewardToUser();
-                        document.getElementById('status').textContent = 
-                            `Reward granted! Ad completed (${state})`;
-                    } else {
-                        // Interstitial closed or ad not fully watched
-                        document.getElementById('status').textContent = 
-                            `Ad finished with done: ${done}, error: ${error} - ${description}`;
-                    }
-                })
-                .catch((result) => {
-                    // Error during ad playback
-                    const { description, error } = result;
-                    document.getElementById('status').textContent = 
-                        `Ad error: ${description} (error: ${error})`;
-                    // Do nothing else (as per the pattern)
-                });
-        });
-
-        // Notify Telegram that the app is ready
-        if (window.Telegram && Telegram.WebApp) {
-            Telegram.WebApp.ready();
-        }
     </script>
 </body>
 </html>
