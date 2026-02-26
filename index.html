@@ -3,104 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TextTools Hub - 5 Useful Text Tools</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Telegram Mini App + Adsgram</title>
+    <!-- Optional: Telegram Web App script (for TMA features) -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Adsgram script -->
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-tools"></i> TextTools Hub</h1>
-            <p>5 useful tools for text manipulation - all in one place!</p>
-        </header>
+    <h1>My Telegram Mini App</h1>
+    <button id="showAdBtn">Show Ad</button>
+    <p id="status"></p>
 
-        <div class="tools-grid">
-            <!-- Tool 1: Text Case Converter -->
-            <div class="tool-card">
-                <h2><i class="fas fa-text-height"></i> Text Case Converter</h2>
-                <textarea id="caseInput" placeholder="Enter your text here..." rows="3"></textarea>
-                <div class="button-group">
-                    <button onclick="convertToUpperCase()" class="btn-primary">
-                        <i class="fas fa-arrow-up"></i> UPPERCASE
-                    </button>
-                    <button onclick="convertToLowerCase()" class="btn-primary">
-                        <i class="fas fa-arrow-down"></i> lowercase
-                    </button>
-                    <button onclick="convertToTitleCase()" class="btn-primary">
-                        <i class="fas fa-font"></i> Title Case
-                    </button>
-                </div>
-                <div class="result-area" id="caseResult"></div>
-                <button onclick="copyToClipboard('caseResult')" class="btn-copy">
-                    <i class="far fa-copy"></i> Copy Result
-                </button>
-            </div>
+    <script>
+        // Replace with your actual Adsgram block ID
+        const BLOCK_ID = "int-23730";
 
-            <!-- Tool 2: Word Counter -->
-            <div class="tool-card">
-                <h2><i class="fas fa-calculator"></i> Word & Character Counter</h2>
-                <textarea id="counterInput" placeholder="Type or paste your text here..." rows="3" oninput="updateCounts()"></textarea>
-                <div class="stats">
-                    <div class="stat-item">
-                        <span class="stat-label">Words:</span>
-                        <span class="stat-value" id="wordCount">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Characters:</span>
-                        <span class="stat-value" id="charCount">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Sentences:</span>
-                        <span class="stat-value" id="sentenceCount">0</span>
-                    </div>
-                </div>
-            </div>
+        // Initialize Adsgram
+        const adController = window.Adsgram.init({ blockId: int-23730 });
 
-            <!-- Tool 3: Text Cleaner -->
-            <div class="tool-card">
-                <h2><i class="fas fa-broom"></i> Text Cleaner</h2>
-                <textarea id="cleanerInput" placeholder="Enter messy text here..." rows="3"></textarea>
-                <div class="button-group">
-                    <button onclick="removeExtraSpaces()" class="btn-primary">
-                        <i class="fas fa-compress-alt"></i> Remove Extra Spaces
-                    </button>
-                    <button onclick="removeLineBreaks()" class="btn-primary">
-                        <i class="fas fa-remove-format"></i> Remove Line Breaks
-                    </button>
-                </div>
-                <div class="result-area" id="cleanerResult"></div>
-                <button onclick="copyToClipboard('cleanerResult')" class="btn-copy">
-                    <i class="far fa-copy"></i> Copy Result
-                </button>
-            </div>
+        // Handle ad showing
+        document.getElementById('showAdBtn').addEventListener('click', async () => {
+            try {
+                const result = await adController.show();
+                document.getElementById('status').textContent = 'Ad finished: ' + JSON.stringify(result);
+            } catch (error) {
+                document.getElementById('status').textContent = 'Ad error: ' + error.message;
+            }
+        });
 
-            <!-- Tool 4: QR Code Generator -->
-            <div class="tool-card">
-                <h2><i class="fas fa-qrcode"></i> QR Code Generator</h2>
-                <input type="text" id="qrInput" placeholder="Enter text or URL for QR code">
-                <div class="button-group">
-                    <button onclick="generateQRCode()" class="btn-primary">
-                        <i class="fas fa-qrcode"></i> Generate QR
-                    </button>
-                </div>
-                <div id="qrResult" class="qr-result"></div>
-                <button onclick="downloadQRCode()" id="downloadBtn" class="btn-copy" style="display: none;">
-                    <i class="fas fa-download"></i> Download QR
-                </button>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <footer>
-            <p>© 2026 TextTools Hub - A simple, free tool for everyone</p>
-            <p><small>All processing happens in your browser - 100% private</small></p>
-        </footer>
-    </div>
-
-    <!-- QR Code library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <!-- Main JavaScript -->
-    <script src="script.js"></script>
+        // Optional: notify Telegram that the app is ready
+        if (window.Telegram && Telegram.WebApp) {
+            Telegram.WebApp.ready();
+        }
+    </script>
 </body>
 </html>
