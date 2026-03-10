@@ -1,223 +1,294 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Adsgram TMA Example</title>
-    <!-- Telegram Mini App styles & meta -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fugu Game</title>
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--tg-theme-bg-color, #f5f5f5);
-            color: var(--tg-theme-text-color, #222);
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 16px;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: linear-gradient(145deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            box-sizing: border-box;
+            margin: 0;
+            padding: 16px;
         }
-        .card {
-            background-color: var(--tg-theme-secondary-bg-color, #ffffff);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        .game-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 36px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
+            padding: 24px 20px 32px;
             text-align: center;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         h1 {
-            font-size: 1.6rem;
-            margin-bottom: 16px;
-            color: var(--tg-theme-accent-text-color, #2A6BFF);
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e3c72, #3b6cb0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
         }
-        .block-id {
-            background: var(--tg-theme-hint-color, #aaa3);
-            padding: 8px 12px;
-            border-radius: 30px;
-            font-weight: 500;
+        .subhead {
+            color: #4a5568;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            font-weight: 400;
+            border-bottom: 1px dashed #cbd5e0;
+            padding-bottom: 12px;
+        }
+        .score-board {
+            background: #2d3748;
+            border-radius: 60px;
+            padding: 12px 24px;
             display: inline-block;
             margin-bottom: 24px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .score-board span {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .score-label {
+            color: #a0aec0;
             font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .button {
-            background-color: var(--tg-theme-button-color, #2A6BFF);
-            color: var(--tg-theme-button-text-color, white);
-            border: none;
-            border-radius: 30px;
-            padding: 14px 24px;
-            font-size: 1.1rem;
-            font-weight: 600;
+        .ad-card {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 20px 16px 18px;
+            margin-bottom: 28px;
+            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.2);
+            border: 2px solid #edf2f7;
+        }
+        .ad-image {
             width: 100%;
-            cursor: pointer;
-            transition: opacity 0.2s;
-            margin-top: 16px;
-        }
-        .button:active {
-            opacity: 0.8;
-        }
-        .button:disabled {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-        .status {
-            margin-top: 24px;
-            padding: 12px;
-            border-radius: 8px;
-            background-color: var(--tg-theme-hint-color, #eee);
-            font-size: 0.95rem;
-            text-align: left;
-            word-break: break-word;
+            height: auto;
             max-height: 200px;
-            overflow-y: auto;
+            object-fit: cover;
+            border-radius: 18px;
+            background: #e2e8f0;
+            margin-bottom: 16px;
+            border: 1px solid #cbd5e0;
         }
-        .status p {
-            margin: 6px 0;
+        .ad-headline {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.2;
+            margin-bottom: 6px;
         }
-        .footer {
-            margin-top: 20px;
+        .ad-description {
+            color: #475569;
+            font-size: 1rem;
+            padding: 0 8px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin: 24px 0 16px;
+        }
+        .btn {
+            border: none;
+            background: none;
+            font-size: 2.2rem;
+            width: 80px;
+            height: 80px;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+        .btn-like {
+            background: #10b981;
+            color: white;
+        }
+        .btn-dislike {
+            background: #ef4444;
+            color: white;
+        }
+        .btn:active {
+            transform: scale(0.9);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        .feedback {
+            min-height: 40px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 40px;
+            background: #f8fafc;
+            padding: 8px 16px;
+            margin-top: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .footer-note {
             font-size: 0.8rem;
-            color: var(--tg-theme-hint-color, #888);
+            color: #94a3b8;
+            margin-top: 24px;
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>🎬 Adsgram Demo</h1>
-        <div class="block-id">Block ID: 23736</div>
-        <p style="margin-bottom: 8px;">Click the button to show a rewarded ad</p>
-        <button id="showAdBtn" class="button">▶ Show Ad</button>
+    <div class="game-card">
+        <h1>Adsonar Review</h1>
+        <div class="subhead">⚡ tap • rate • win</div>
 
-        <!-- Status log area -->
-        <div class="status" id="statusLog">
-            <p>⚡ Initializing...</p>
+        <div class="score-board">
+            <div class="score-label">SCORE</div>
+            <span id="scoreValue">0</span>
         </div>
-        <div class="footer">Powered by Adsgram · Telegram Mini App</div>
-    </div>
 
-    <!-- Telegram Web App script (required for TMA) -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Adsgram script -->
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+        <!-- Ad display card -->
+        <div class="ad-card">
+            <img id="adImage" class="ad-image" src="https://placehold.co/400x200/3b82f6/white?text=Loading+Ad..." alt="ad creative">
+            <div id="adHeadline" class="ad-headline">Awesome Product</div>
+            <div id="adDescription" class="ad-description">Short description will appear here</div>
+        </div>
+
+        <!-- Like / Dislike buttons -->
+        <div class="action-buttons">
+            <button class="btn btn-like" id="likeBtn">👍</button>
+            <button class="btn btn-dislike" id="dislikeBtn">👎</button>
+        </div>
+
+        <!-- Instant feedback area -->
+        <div id="feedbackMessage" class="feedback">👆 vote now</div>
+        <div class="footer-note">— game category —</div>
+    </div>
 
     <script>
         (function() {
-            // --- Telegram Mini App setup ---
+            // --- Telegram WebApp init ---
             const tg = window.Telegram?.WebApp;
             if (tg) {
-                tg.ready();          // notify Telegram that the app is ready
-                tg.expand();          // expand to full height
-                // Optional: set theme colors automatically via CSS variables
-                document.body.style.backgroundColor = tg.backgroundColor || '#f5f5f5';
+                tg.expand();               // expand to full height
+                tg.enableClosingConfirmation(); // optional: ask before closing
+                // You can also set the main button if you want (optional)
+                // tg.MainButton.setText('Submit Score');
+                // tg.MainButton.show();
             }
 
-            // --- DOM elements ---
-            const showAdBtn = document.getElementById('showAdBtn');
-            const statusLog = document.getElementById('statusLog');
+            // --- Game data (simulated ads) ---
+            const ads = [
+                { image: 'https://placehold.co/400x200/22c55e/white?text=Ergonomic+Chair', headline: 'Ergonomic Chair', description: 'Back pain? Never again! 40% off today.', good: true },
+                { image: 'https://placehold.co/400x200/eab308/black?text=Burger+King', headline: 'Whopper Deal', description: 'Buy 1 Get 1 Free – limited time.', good: false },
+                { image: 'https://placehold.co/400x200/ef4444/white?text=Online+Casino', headline: 'Win Big!', description: 'Spin the wheel and get up to $500.', good: false },
+                { image: 'https://placehold.co/400x200/3b82f6/white?text=Learning+App', headline: 'Learn Python', description: 'Interactive courses, start for free.', good: true },
+                { image: 'https://placehold.co/400x200/a855f7/white?text=Skincare+Set', headline: 'Glowing Skin Kit', description: 'Natural ingredients – 30% off first order.', good: true }
+            ];
 
-            // Helper to add status messages
-            function log(message, isError = false) {
-                const p = document.createElement('p');
-                p.textContent = `> ${message}`;
-                if (isError) p.style.color = 'var(--tg-theme-destructive-text-color, #d32f2f)';
-                statusLog.appendChild(p);
-                // Auto-scroll to bottom
-                statusLog.scrollTop = statusLog.scrollHeight;
+            let currentAd = null;
+            let score = 0;
+
+            // DOM elements
+            const scoreSpan = document.getElementById('scoreValue');
+            const adImage = document.getElementById('adImage');
+            const adHeadline = document.getElementById('adHeadline');
+            const adDescription = document.getElementById('adDescription');
+            const feedbackDiv = document.getElementById('feedbackMessage');
+            const likeBtn = document.getElementById('likeBtn');
+            const dislikeBtn = document.getElementById('dislikeBtn');
+
+            // Helper: pick random ad
+            function getRandomAd() {
+                return ads[Math.floor(Math.random() * ads.length)];
             }
 
-            // Clear initial log
-            statusLog.innerHTML = '<p>⏳ Waiting for Adsgram...</p>';
+            // Load a new ad into UI
+            function loadNewAd() {
+                currentAd = getRandomAd();
+                adImage.src = currentAd.image;
+                adHeadline.innerText = currentAd.headline;
+                adDescription.innerText = currentAd.description;
+                // Reset feedback to neutral
+                feedbackDiv.innerText = '👆 new ad – vote!';
+                feedbackDiv.style.color = '#334155';
+                feedbackDiv.style.background = '#f8fafc';
+            }
 
-            // --- Adsgram initialization (with blockId = 23736) ---
-            let adController = null;
-            let adsInitialized = false;
+            // Update score display
+            function updateScore() {
+                scoreSpan.innerText = score;
+            }
 
-            // Ensure Adsgram script is loaded
-            if (window.Adsgram) {
-                try {
-                    adController = window.Adsgram.init({ blockId: "23736" });
-                    adsInitialized = true;
-                    statusLog.innerHTML = '<p>✅ Adsgram initialized (block 23736)</p>';
-                    log('Ready to show ads.');
-                } catch (e) {
-                    statusLog.innerHTML = '<p style="color: red;">❌ Adsgram init failed</p>';
-                    log(e.message, true);
-                    showAdBtn.disabled = true;
+            // Show feedback message (colored)
+            function showFeedback(message, isCorrect) {
+                feedbackDiv.innerText = message;
+                feedbackDiv.style.background = isCorrect ? '#d1fae5' : '#fee2e2';
+                feedbackDiv.style.color = isCorrect ? '#065f46' : '#991b1b';
+                // Optionally send data to Telegram if needed
+                if (tg) {
+                    // Example: you could send the score increment event
+                    // tg.sendData(JSON.stringify({ event: 'vote', correct: isCorrect, score: score }));
                 }
-            } else {
-                // If script not loaded yet, wait for it
-                statusLog.innerHTML = '<p>⏳ Loading Adsgram...</p>';
-                const checkAdsgram = setInterval(() => {
-                    if (window.Adsgram) {
-                        clearInterval(checkAdsgram);
-                        try {
-                            adController = window.Adsgram.init({ blockId: "23736" });
-                            adsInitialized = true;
-                            statusLog.innerHTML = '<p>✅ Adsgram initialized (block 23736)</p>';
-                            log('Ready to show ads.');
-                        } catch (e) {
-                            statusLog.innerHTML = '<p style="color: red;">❌ Adsgram init failed</p>';
-                            log(e.message, true);
-                            showAdBtn.disabled = true;
-                        }
-                    }
-                }, 100);
             }
 
-            // --- Show ad button handler ---
-            showAdBtn.addEventListener('click', function() {
-                if (!adsInitialized || !adController) {
-                    log('Ad controller not ready yet.', true);
-                    return;
+            // Handle a vote (user's choice: true = liked, false = disliked)
+            function handleVote(userLiked) {
+                if (!currentAd) return;
+
+                const isCorrect = (userLiked === currentAd.good);
+                if (isCorrect) {
+                    score += 10;
+                    showFeedback('✅ Correct! +10 points', true);
+                } else {
+                    showFeedback('❌ Oops! Wrong vote', false);
                 }
 
-                log('🚀 Calling AdController.show()...');
-                showAdBtn.disabled = true; // prevent double-click
+                updateScore();
 
-                // Show the ad as described in the snippet
-                adController.show()
-                    .then((result) => {
-                        // result conforms to ShowPromiseResult interface
-                        // user watched till end or closed it (interstitial)
-                        log(`✅ Ad finished - done: ${result.done}, state: ${result.state}, error: ${result.error}`);
-                        if (result.done) {
-                            log('🎉 Reward the user!');
-                        } else {
-                            log('ℹ️ Ad closed without full watch (interstitial)');
-                        }
-                        showAdBtn.disabled = false;
-                    })
-                    .catch((errorResult) => {
-                        // errorResult also matches ShowPromiseResult with error=true
-                        log(`❌ Ad error - description: ${errorResult.description}, state: ${errorResult.state}`, true);
-                        showAdBtn.disabled = false;
-                    });
-            });
+                // After short delay, load next ad
+                setTimeout(() => {
+                    loadNewAd();
+                }, 600);
+            }
 
-            // Optional: log if Telegram WebApp is available
+            // Event listeners
+            likeBtn.addEventListener('click', () => handleVote(true));
+            dislikeBtn.addEventListener('click', () => handleVote(false));
+
+            // Initialize first ad
+            loadNewAd();
+            updateScore();
+
+            // Optional: handle main button click if you enabled it
             if (tg) {
-                log('Telegram WebApp API ready');
-            } else {
-                log('Running outside Telegram? (TMA features limited)', true);
+                tg.onEvent('mainButtonClicked', function() {
+                    // Send final score back to bot (if you want)
+                    tg.sendData(JSON.stringify({ score: score }));
+                    tg.close();
+                });
             }
-        })();
-    </script>
 
-    <!-- Type reference for ShowPromiseResult (not executed, just for clarity) -->
-    <script>
-        /**
-         * interface ShowPromiseResult {
-         *   done: boolean;       // true if user watch till the end or close it in interstitial format, otherwise false
-         *   description: string; // event description
-         *   state: 'load' | 'render' | 'playing' | 'destroy'; // banner state
-         *   error: boolean;      // true if event was emitted due to error, otherwise false
-         * }
-         */
+            // For better mobile experience, prevent double-tap zoom on buttons
+            likeBtn.addEventListener('touchstart', (e) => e.preventDefault());
+            dislikeBtn.addEventListener('touchstart', (e) => e.preventDefault());
+        })();
     </script>
 </body>
 </html>
